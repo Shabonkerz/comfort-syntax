@@ -1,0 +1,182 @@
+{{outlet}}
+<main id="content">
+	<header class="page-header">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12 col-lg-12">
+					<h1>Cameras
+						<small>Manage and monitor camera status.</small>
+					</h1>
+				</div>
+			</div>
+		</div>
+	</header>
+	<!-- Cameras List -->
+	{{#each model.cameras as |camera index|}}
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12 col-lg-12">
+					<div class="box mb-small">
+						<div class="row">
+							<div class="col-md-4 col-lg-4">
+								<h2 class="cameraName">{{camera.CameraName}}</h2>
+							</div>
+							<div class="col-md-2 col-lg-5">
+								{{#if camera.ShowImageLimit}}
+									<strong>Images Available:</strong>
+									<br>
+									<i class="icon-attention"></i> <a href="" data-target="#warningModal-{{camera.Id}}" data-toggle="modal">Upload {{camera.ImagesAvailable}} Images</a>
+								{{/if}}
+							</div>
+							<div class="col-md-4 col-lg-3">
+								<strong>Latest Activity:</strong>
+								<br> {{formatted-date camera.LatestActivity 'MM/DD/YYYY h:mm A z'}}
+							</div>
+						</div>
+						<div class="divider"></div>
+						<div class="row">
+							<div class="col-lg-4">
+								<p>
+									<strong>Current Plan:</strong> {{camera.PlanName}}</p>
+								<p>
+									<strong>Modem ID:</strong> {{camera.MEID}}</p>
+								<p>
+									<strong>Software:</strong> {{camera.SoftwareVersion}}
+									{{#if (not-eq camera.AvailableUpdateVersion null)}}
+										{{#unless camera.SoftwareUpdateAccepted}}
+											<i class="icon-attention"></i><a href="#" {{action "requestSoftwareUpdate" camera.Id}} class="">Update Available</a>
+										{{/unless}}
+									{{/if}}
+								</p>
+								<div class="ln-doc-m-battery">
+									<div class="progress">
+										<div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" style="width: {{camera.ModemBatteryLevel}}%;">
+											<span class="progressbar-value">{{camera.ModemBatteryLevel}}%</span>
+										</div>
+									</div>
+								</div>
+								<div class="divider"></div>
+								<p>
+									<strong>Camera Model:</strong> {{camera.Model}}</p>
+								<div class="ln-doc-c-battery">
+									<div class="progress">
+										<div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" style="width: {{camera.CameraBatteryLevel}}%;">
+											<span class="progressbar-value">{{camera.CameraBatteryLevel}}%</span>
+										</div>
+									</div>
+								</div>
+								<div class="ln-doc-sd-card">
+									<div class="progress">
+										<div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" style="width: {{camera.FreeStoragePercent}}%;">
+											<span class="progressbar-value">{{camera.FreeStoragePercent}}%</span>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-lg-5">
+								<p>
+									<strong>Data Usage:</strong> {{camera.DataUsedPercent}}% ({{camera.DataUsed}} of {{camera.TotalDataAvailable}} GB)</p>
+								<div class="ct-chart ct-major-tenth" id="data-usage-chart-{{camera.Id}}"></div>
+								<div style="width:60%;" class="mt-small">
+									<p>
+										<strong>Signal Strength:</strong> {{camera.SignalStrength}}%</p>
+									<div class="signal-chart ct-chart ct-major-seventh" id="data-signal-chart-{{camera.Id}}"></div>
+								</div>
+							</div>
+							<div class="col-lg-3">
+								<p></p>
+								<p>
+									{{#link-to 'camerasettings' camera.Id class="btn default" }}<i class="icon-cog-alt"></i>Edit Settings{{/link-to}}
+								</p>
+								<p><a href="#" class="btn default"><i class="icon-attention"></i>Manage Alerts</a></p>
+								<p><a href="#" class="btn default"><i class="icon-basket"></i>Buy Data</a></p>
+								<p class="btn-group">
+									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i class="icon-exchange"></i>Manage Plan
+										<span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu">
+										{{#if camera.modem.removedOrRemoving}}
+											<li>
+												<a href="#" data-target="#removeModal" data-toggle="modal" {{action 'selectCamera' camera}}>Remove Modem</a>
+											</li>
+										{{else}}
+											<li class="disabled">
+												Remove Modem
+											</li>
+										{{/if}}
+										<li>
+											{{#link-to 'changeplan' camera.Id}}<a href="#">Change Plan</a>{{/link-to}}
+										</li>
+										<li>
+											{{#link-to 'cancelplan' camera.Id}}<a href="#">Cancel Plan</a>{{/link-to}}
+										</li>
+									</ul>
+									<!--#link-to 'plan' camera.ModemId class="btn default" <i class="icon-exchange"></i>Manage Plan/link-to--></p>
+								<div class="map pt-small" id="map-{{camera.Id}}">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{{/each}}
+</main>
+
+{{#each model.cameras as |camera index|}}
+	<!-- Image Upload Warning modal -->
+	<div class="modal fade" id="warningModal-{{camera.Id}}">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">×</span>
+						<span class="sr-only">Close</span>
+					</button>
+					<h4 class="modal-title">Upload Images</h4>
+				</div>
+				<div class="modal-body">
+					<br> You have {{camera.ImagesAvailable}} images to upload which exceeds the limit of {{camera.UploadWarningLimit}} you have set. Do you want to upload these images? If you skip this upload you won't be able to upload them later, but they will remain
+					on the camera's SD card.
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" {{action 'uploadImages' camera on='click'}} data-dismiss="modal">
+						Upload
+					</button>
+					<button type="button" class="btn btn-primary" {{action 'skipImages' camera on='click'}} data-dismiss="modal">
+						Skip
+					</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal">
+						Cancel
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{{/each}}
+<!-- Accept Software Update modal -->
+<div class="modal fade" id="softwareUpdateModal">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">
+					<span aria-hidden="true">×</span>
+					<span class="sr-only">Close</span>
+				</button>
+				<h4 class="modal-title">Software Update</h4>
+			</div>
+			<div class="modal-body">
+				You have scheduled a software update for your modem. The next time the modem checks in new software will automatically download and install on it.
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">
+					Dismiss
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+{{!-- Modals --}}
+{{confirm-modal onConfirm='remove' id='removeModal' params=selectedCamera message='Are you sure you wish to remove this modem?' }}
