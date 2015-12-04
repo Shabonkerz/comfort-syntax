@@ -1,0 +1,15 @@
+{
+  "name": "comfort-syntax",
+  "theme": "syntax",
+  "version": "0.0.1",
+  "description": "Comfort syntax theme for Atom Editor",
+  "keywords": [
+    "syntax",
+    "theme"
+  ],
+  "repository": "https://github.com/Shabonkerz/comfort-syntax",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  }
+}
